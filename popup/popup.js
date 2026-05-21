@@ -3,7 +3,13 @@
 
   const CFS = globalScope.CFS;
   const { getSettings, updateSettings, storageGet, storageSet } = CFS.storage;
-  const { normalizeTitle } = CFS.shared;
+  const { EpisodeClass, WatchMode, normalizeTitle } = CFS.shared;
+
+  const MODE_DESCRIPTIONS = Object.freeze({
+    [WatchMode.CANON_ONLY]: "Skips filler and mixed for the clean canon path.",
+    [WatchMode.CANON_MIXED]: "Skips pure filler and keeps mixed episodes.",
+    [WatchMode.FILLER_ONLY]: "Skips canon and mixed to play only filler."
+  });
 
   /**
    * @param {string} id
@@ -24,25 +30,109 @@
   const displayValue = (value) => value || "-";
 
   /**
+   * @param {unknown} value
+   * @returns {string}
+   */
+  const asText = (value) => String(value || "");
+
+  /**
+   * @param {Record<string, unknown>} cache
+   * @param {string} slug
+   * @returns {{ total: number, canon: number, mixed: number, filler: number }}
+   */
+  const readBreakdown = (cache, slug) => {
+    const empty = { total: 0, canon: 0, mixed: 0, filler: 0 };
+    const entry = /** @type {{ value?: { episodes?: Record<string, { classification: string }> } } | undefined} */ (cache[`afl-show:${slug}`]);
+    const episodes = entry && entry.value ? entry.value.episodes || {} : {};
+    return Object.values(episodes).reduce((counts, episode) => {
+      const classification = episode.classification;
+      return {
+        total: counts.total + 1,
+        canon: counts.canon + (classification === EpisodeClass.CANON ? 1 : 0),
+        mixed: counts.mixed + (classification === EpisodeClass.MIXED ? 1 : 0),
+        filler: counts.filler + (classification === EpisodeClass.FILLER ? 1 : 0)
+      };
+    }, empty);
+  };
+
+  /**
+   * @param {string} watchMode
+   * @returns {void}
+   */
+  const renderModeCards = (watchMode) => {
+    Array.from(document.querySelectorAll("[data-mode]")).forEach((element) => {
+      const mode = element.getAttribute("data-mode") || "";
+      element.setAttribute("aria-checked", mode === watchMode ? "true" : "false");
+    });
+    getElement("modeDescription").textContent = MODE_DESCRIPTIONS[watchMode] || "";
+  };
+
+  /**
+   * @param {Record<string, unknown>} status
+   * @returns {void}
+   */
+  const renderSourceLink = (status) => {
+    const link = /** @type {HTMLAnchorElement} */ (getElement("sourceLink"));
+    const url = asText(status.resolvedAflUrl);
+    if (!url) {
+      link.style.display = "none";
+      link.removeAttribute("href");
+      return;
+    }
+    link.style.display = "inline-block";
+    link.href = url;
+  };
+
+  /**
+   * @param {{ total: number, canon: number, mixed: number, filler: number }} breakdown
+   * @returns {void}
+   */
+  const renderBreakdown = (breakdown) => {
+    getElement("totalEpisodes").textContent = breakdown.total > 0 ? String(breakdown.total) : "-";
+    getElement("canonEpisodes").textContent = breakdown.total > 0 ? String(breakdown.canon) : "-";
+    getElement("mixedEpisodes").textContent = breakdown.total > 0 ? String(breakdown.mixed) : "-";
+    getElement("fillerEpisodes").textContent = breakdown.total > 0 ? String(breakdown.filler) : "-";
+    getElement("breakdownStatus").textContent = breakdown.total > 0
+      ? "Episode counts are loaded for the resolved show."
+      : "Episode counts load automatically from the series page.";
+  };
+
+  /**
    * @returns {Promise<void>}
    */
   const render = async () => {
     const settings = await getSettings();
-    const result = await storageGet({ latestStatus: {} });
-    const status = /** @type {{ latestStatus: Record<string, unknown> }} */ (result).latestStatus;
+    const result = await storageGet({ latestStatus: {}, cache: {} });
+    const status = /** @type {{ latestStatus: Record<string, unknown>, cache: Record<string, unknown> }} */ (result).latestStatus;
+    const cache = /** @type {{ latestStatus: Record<string, unknown>, cache: Record<string, unknown> }} */ (result).cache;
+    const detectedTitle = asText(status.detectedShowTitle);
+    const resolvedSlug = asText(status.resolvedAflSlug);
+    const hasError = asText(status.debugStatus) === "error" || Boolean(status.error);
+    const showTitle = detectedTitle || "No show detected";
+    const showStatus = resolvedSlug
+      ? "Auto-detected from Crunchyroll."
+      : detectedTitle
+        ? "Auto-detected from Crunchyroll."
+        : hasError
+          ? "Open a Crunchyroll series or watch page."
+        : "Open a Crunchyroll series or watch page.";
 
     /** @type {HTMLInputElement} */ (getElement("enabled")).checked = settings.enabled;
-    /** @type {HTMLSelectElement} */ (getElement("watchMode")).value = settings.watchMode;
     /** @type {HTMLInputElement} */ (getElement("debug")).checked = settings.debug;
+    getElement("enabledLabel").textContent = settings.enabled ? "ON" : "OFF";
 
-    getElement("showTitle").textContent = displayValue(String(status.detectedShowTitle || ""));
-    getElement("aflTarget").textContent = displayValue(String(status.resolvedAflSlug || ""));
+    getElement("showTitle").textContent = showTitle;
+    getElement("showStatus").textContent = showStatus;
+    getElement("mappingStatus").textContent = resolvedSlug ? "Auto" : "Pending";
     getElement("episodeNumber").textContent = displayValue(status.episodeNumber ? String(status.episodeNumber) : "");
-    getElement("classification").textContent = displayValue(String(status.sourceLabel || status.classification || ""));
+    getElement("classification").textContent = displayValue(asText(status.sourceLabel || status.classification));
     getElement("decision").textContent = status.shouldSkip === true ? "Skip" : status.shouldSkip === false ? "Watch" : "-";
-    getElement("debugStatus").textContent = displayValue(String(status.error || status.debugStatus || ""));
+    getElement("debugStatus").textContent = displayValue(asText(status.error || status.debugStatus));
 
-    const detectedTitle = String(status.detectedShowTitle || "");
+    renderSourceLink(status);
+    renderModeCards(settings.watchMode);
+    renderBreakdown(resolvedSlug ? readBreakdown(cache, resolvedSlug) : { total: 0, canon: 0, mixed: 0, filler: 0 });
+
     const overrideSlug = settings.manualOverrides[normalizeTitle(detectedTitle)] || "";
     /** @type {HTMLInputElement} */ (getElement("manualSlug")).value = overrideSlug;
   };
@@ -54,7 +144,7 @@
     const settings = await getSettings();
     const result = await storageGet({ latestStatus: {} });
     const status = /** @type {{ latestStatus: Record<string, unknown> }} */ (result).latestStatus;
-    const detectedTitle = String(status.detectedShowTitle || "");
+    const detectedTitle = asText(status.detectedShowTitle);
     if (!detectedTitle) {
       throw new Error("Cannot save manual override before a show is detected.");
     }
@@ -68,7 +158,7 @@
       delete manualOverrides[key];
     }
     await updateSettings({ manualOverrides });
-    await render();
+    await clearMappingForDetectedShow();
   };
 
   /**
@@ -78,13 +168,19 @@
     const result = await storageGet({ latestStatus: {}, cache: {} });
     const status = /** @type {{ latestStatus: Record<string, unknown>, cache: Record<string, unknown> }} */ (result).latestStatus;
     const cache = /** @type {{ latestStatus: Record<string, unknown>, cache: Record<string, unknown> }} */ (result).cache;
-    const detectedTitle = String(status.detectedShowTitle || "");
-    if (!detectedTitle) {
+    const detectedTitle = asText(status.detectedShowTitle);
+    const resolvedSlug = asText(status.resolvedAflSlug);
+    if (!detectedTitle && !resolvedSlug) {
       return;
     }
-    const key = `afl-mapping:${normalizeTitle(detectedTitle)}`;
+
     const nextCache = { ...cache };
-    delete nextCache[key];
+    if (detectedTitle) {
+      delete nextCache[`afl-mapping:${normalizeTitle(detectedTitle)}`];
+    }
+    if (resolvedSlug) {
+      delete nextCache[`afl-show:${resolvedSlug}`];
+    }
     await storageSet({ cache: nextCache });
     await render();
   };
@@ -94,9 +190,12 @@
     await render();
   });
 
-  getElement("watchMode").addEventListener("change", async (event) => {
-    await updateSettings({ watchMode: /** @type {HTMLSelectElement} */ (event.currentTarget).value });
-    await render();
+  Array.from(document.querySelectorAll("[data-mode]")).forEach((element) => {
+    element.addEventListener("click", async () => {
+      const watchMode = element.getAttribute("data-mode") || WatchMode.CANON_ONLY;
+      await updateSettings({ watchMode });
+      await render();
+    });
   });
 
   getElement("debug").addEventListener("change", async (event) => {
@@ -114,6 +213,16 @@
     clearMappingForDetectedShow().catch((error) => {
       getElement("debugStatus").textContent = error instanceof Error ? error.message : String(error);
     });
+  });
+
+  getElement("advancedOpen").addEventListener("click", () => {
+    getElement("mainView").classList.remove("view-active");
+    getElement("advancedView").classList.add("view-active");
+  });
+
+  getElement("advancedBack").addEventListener("click", () => {
+    getElement("advancedView").classList.remove("view-active");
+    getElement("mainView").classList.add("view-active");
   });
 
   render().catch((error) => {

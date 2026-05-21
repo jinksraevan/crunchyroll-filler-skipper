@@ -27,9 +27,28 @@
       .replace(/\s+-\s+Watch on Crunchyroll.*$/i, "")
       .replace(/\s+\|\s+Crunchyroll.*$/i, "")
       .replace(/\s*-\s*Crunchyroll.*$/i, "")
+      .replace(/^Watch\s+/i, "")
       .replace(/\s+/g, " ")
       .trim();
     return title || null;
+  };
+
+  /**
+   * @param {string} slug
+   * @returns {string}
+   */
+  const titleFromSlug = (slug) => slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+  /**
+   * @returns {string | null}
+   */
+  const detectTitleFromSeriesUrl = () => {
+    const match = location.pathname.match(/\/series\/[^/]+\/([^/?#]+)/i);
+    return match ? cleanTitle(titleFromSlug(decodeURIComponent(match[1]))) : null;
   };
 
   /**
@@ -104,6 +123,11 @@
       .find(Boolean);
     if (seriesLink) {
       return { title: seriesLink, source: "series-link" };
+    }
+
+    const seriesUrlTitle = detectTitleFromSeriesUrl();
+    if (seriesUrlTitle) {
+      return { title: seriesUrlTitle, source: "series-url" };
     }
 
     const documentTitle = cleanTitle(document.title);

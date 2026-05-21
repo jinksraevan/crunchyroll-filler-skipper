@@ -8,64 +8,130 @@
   </head>
   <body>
     <main class="panel">
-      <header class="header">
-        <h1>Filler Skipper</h1>
-        <label class="toggle">
-          <input id="enabled" type="checkbox">
-          <span>Enabled</span>
-        </label>
-      </header>
+      <section id="mainView" class="view view-active">
+        <header class="header">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">FS</div>
+            <div>
+              <h1>Filler Skipper</h1>
+              <a id="sourceLink" class="source-link" href="#" target="_blank" rel="noreferrer">Source: AnimeFillerList</a>
+            </div>
+          </div>
 
-      <label class="field">
-        <span>Watch mode</span>
-        <select id="watchMode">
-          <option value="CANON_ONLY">Canon Only</option>
-          <option value="CANON_MIXED">Canon + Mixed</option>
-          <option value="FILLER_ONLY">Filler Only</option>
-        </select>
-      </label>
+          <label class="switch" aria-label="Enable extension">
+            <span id="enabledLabel">ON</span>
+            <input id="enabled" type="checkbox">
+            <span class="switch-track" aria-hidden="true">
+              <span class="switch-thumb"></span>
+            </span>
+          </label>
+        </header>
 
-      <section class="status-grid" aria-label="Current status">
-        <div>
-          <span>Show</span>
-          <strong id="showTitle">-</strong>
-        </div>
-        <div>
-          <span>AFL target</span>
-          <strong id="aflTarget">-</strong>
-        </div>
-        <div>
-          <span>Episode</span>
-          <strong id="episodeNumber">-</strong>
-        </div>
-        <div>
-          <span>Classification</span>
-          <strong id="classification">-</strong>
-        </div>
-        <div>
-          <span>Decision</span>
-          <strong id="decision">-</strong>
-        </div>
-        <div>
-          <span>Status</span>
-          <strong id="debugStatus">-</strong>
-        </div>
+        <section class="section">
+          <h2>Show</h2>
+          <div class="show-card">
+            <div>
+              <strong id="showTitle">No show detected</strong>
+              <span id="showStatus">Open a Crunchyroll series or watch page.</span>
+            </div>
+            <span id="mappingStatus" class="mapping-pill">Auto</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Watch Mode</h2>
+          <div class="mode-grid" role="radiogroup" aria-label="Watch mode">
+            <button class="mode-card mode-canon" type="button" data-mode="CANON_ONLY" role="radio" aria-checked="false">
+              <span class="mode-icon" aria-hidden="true">📖</span>
+              <span>Canon Only</span>
+            </button>
+            <button class="mode-card mode-mixed" type="button" data-mode="CANON_MIXED" role="radio" aria-checked="false">
+              <span class="mode-icon" aria-hidden="true">🔀</span>
+              <span>Canon + Mixed</span>
+            </button>
+            <button class="mode-card mode-filler" type="button" data-mode="FILLER_ONLY" role="radio" aria-checked="false">
+              <span class="mode-icon" aria-hidden="true">🚫</span>
+              <span>Filler Only</span>
+            </button>
+          </div>
+          <p id="modeDescription" class="notice"></p>
+        </section>
+
+        <section class="section">
+          <h2>Episode Breakdown</h2>
+          <div class="breakdown-grid">
+            <div class="stat-card">
+              <strong id="totalEpisodes">-</strong>
+              <span>Total</span>
+            </div>
+            <div class="stat-card">
+              <strong id="canonEpisodes">-</strong>
+              <span>Canon</span>
+            </div>
+            <div class="stat-card">
+              <strong id="mixedEpisodes">-</strong>
+              <span>Mixed</span>
+            </div>
+            <div class="stat-card">
+              <strong id="fillerEpisodes">-</strong>
+              <span>Filler</span>
+            </div>
+          </div>
+          <p id="breakdownStatus" class="quiet-notice">Link opens after the show is resolved.</p>
+        </section>
+
+        <button id="advancedOpen" class="advanced-link" type="button">Advanced</button>
       </section>
 
-      <section class="override">
-        <label class="field">
-          <span>Manual AFL slug override</span>
-          <input id="manualSlug" type="text" placeholder="naruto">
-        </label>
-        <button id="saveOverride" type="button">Save for detected show</button>
-        <button id="recheck" type="button">Re-check mapping</button>
-      </section>
+      <section id="advancedView" class="view">
+        <header class="header">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">FS</div>
+            <div>
+              <h1>Advanced</h1>
+              <span class="subtle-title">Filler Skipper settings</span>
+            </div>
+          </div>
+          <button id="advancedBack" class="back-button" type="button">Back</button>
+        </header>
 
-      <label class="toggle footer-toggle">
-        <input id="debug" type="checkbox">
-        <span>Debug logging</span>
-      </label>
+        <div class="advanced-content">
+          <div class="debug-row">
+            <span>Status</span>
+            <strong id="debugStatus">-</strong>
+          </div>
+
+          <div class="debug-row">
+            <span>Episode</span>
+            <strong id="episodeNumber">-</strong>
+          </div>
+
+          <div class="debug-row">
+            <span>Classification</span>
+            <strong id="classification">-</strong>
+          </div>
+
+          <div class="debug-row">
+            <span>Decision</span>
+            <strong id="decision">-</strong>
+          </div>
+
+          <label class="field">
+            <span>Manual AFL slug override</span>
+            <input id="manualSlug" type="text" placeholder="naruto">
+          </label>
+
+          <button id="saveOverride" class="secondary-button" type="button">Save for detected show</button>
+          <button id="recheck" class="secondary-button" type="button">Refresh data</button>
+
+          <label class="inline-check">
+            <input id="debug" type="checkbox">
+            <span>Debug logging</span>
+          </label>
+        </div>
+      </section>
     </main>
+
     <script src="../src/shared.js"></script>
     <script src="../src/storage.js"></script>
     <script src="popup.js"></script>
