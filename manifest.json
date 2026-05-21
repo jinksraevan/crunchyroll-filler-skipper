@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Crunchyroll Filler Skipper",
+  "version": "0.1.0",
+  "description": "Automatically skips Crunchyroll episodes based on AnimeFillerList classifications.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.crunchyroll.com/*",
+    "https://www.animefillerlist.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.crunchyroll.com/*"],
+      "js": [
+        "src/shared.js",
+        "src/storage.js",
+        "src/afl.js",
+        "src/crunchyroll.js",
+        "src/banner.js",
+        "src/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Crunchyroll Filler Skipper",
+    "default_popup": "popup/popup.html"
+  }
+}

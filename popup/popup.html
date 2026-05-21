@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crunchyroll Filler Skipper</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <header class="header">
+        <h1>Filler Skipper</h1>
+        <label class="toggle">
+          <input id="enabled" type="checkbox">
+          <span>Enabled</span>
+        </label>
+      </header>
+
+      <label class="field">
+        <span>Watch mode</span>
+        <select id="watchMode">
+          <option value="CANON_ONLY">Canon Only</option>
+          <option value="CANON_MIXED">Canon + Mixed</option>
+          <option value="FILLER_ONLY">Filler Only</option>
+        </select>
+      </label>
+
+      <section class="status-grid" aria-label="Current status">
+        <div>
+          <span>Show</span>
+          <strong id="showTitle">-</strong>
+        </div>
+        <div>
+          <span>AFL target</span>
+          <strong id="aflTarget">-</strong>
+        </div>
+        <div>
+          <span>Episode</span>
+          <strong id="episodeNumber">-</strong>
+        </div>
+        <div>
+          <span>Classification</span>
+          <strong id="classification">-</strong>
+        </div>
+        <div>
+          <span>Decision</span>
+          <strong id="decision">-</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong id="debugStatus">-</strong>
+        </div>
+      </section>
+
+      <section class="override">
+        <label class="field">
+          <span>Manual AFL slug override</span>
+          <input id="manualSlug" type="text" placeholder="naruto">
+        </label>
+        <button id="saveOverride" type="button">Save for detected show</button>
+        <button id="recheck" type="button">Re-check mapping</button>
+      </section>
+
+      <label class="toggle footer-toggle">
+        <input id="debug" type="checkbox">
+        <span>Debug logging</span>
+      </label>
+    </main>
+    <script src="../src/shared.js"></script>
+    <script src="../src/storage.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

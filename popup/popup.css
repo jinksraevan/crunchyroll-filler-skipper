@@ -1,0 +1,109 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.panel {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.toggle,
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.toggle {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+}
+
+select,
+input[type="text"],
+button {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #111827;
+  color: #f8fafc;
+  font: inherit;
+}
+
+select,
+input[type="text"] {
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+button {
+  min-height: 34px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1f2937;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.status-grid div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #243044;
+  border-radius: 8px;
+  background: #111827;
+}
+
+.status-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.status-grid strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.override {
+  display: grid;
+  gap: 8px;
+}
+
+.footer-toggle {
+  margin-top: 14px;
+}
